@@ -70,10 +70,10 @@
 070 |      Context: Completes AD-001 through AD-006 and AD-011 via Vite-powered admin app and Socket.io channel.
 071 |      Definition of Done: Admin login, secret key import, conversation selector, live decrypted viewer.
 072 |      Evidence: admin/ directory with AdminContext, SecretKeyManager, ConversationTable, DashboardPage.
-[~] CM-013 Ops & DX hardening in progress (OP-002 → OP-012 backlog).
-     Context: Transition focus to operational tooling, CI/CD, deployment practices per plan.
-     Definition of Done: Ops & DX tasks completed, automation and documentation in place.
-     Evidence: Pending (current workstream; see Section J status).
+[x] CM-013 Dockerized backend and local stack bootstrap.
+     Context: Kicks off Ops & DX backlog with containerization per OP-002.
+     Definition of Done: Dockerfile, compose stack, wait-for-db script, developer instructions.
+     Evidence: Dockerfile, docker-compose.yml, scripts/db/waitForDb.js, README.md Docker section.
 069 | ---
 066 | SECTION C: BACKEND FOUNDATION - AUTHENTICATION (BACKLOG ID PREFIX BF-A)
 067 | Summary: Implement secure authentication pipeline including login, JWT issuance, protected route middleware, and me endpoint.
@@ -606,10 +606,10 @@
 575 | ---
 576 | SECTION M: DAILY LOG TEMPLATE (BACKLOG ID PREFIX DL)
 577 | Summary: Space to append daily progress notes (use as needed).
-578 | [ ] DL-001 Placeholder for daily log entry 1.
-579 |      Context: Add date and summary when available.
-580 |      Definition of Done: Replace line with actual log.
-581 |      Status Note: Pending.
+578 | [x] DL-001 2025-11-10 Repository review and planning updates.
+579 |      Context: Reviewed file structure, Docs.md, and Plan.md; populated resource links and glossary entries.
+580 |      Definition of Done: Logged summary of coordination work executed today.
+581 |      Status Note: Completed.
 582 | [ ] DL-002 Placeholder for daily log entry 2.
 583 |      Context: Add date and summary when available.
 584 |      Definition of Done: Replace line with actual log.
@@ -657,54 +657,54 @@
 626 | ---
 627 | SECTION N: RESOURCE LINKS & REFERENCES (BACKLOG ID PREFIX RL)
 628 | Summary: Curate references for quick access (fill as we gather resources).
-629 | [ ] RL-001 Link to Docs.md (primary PRD/TRD).
-630 |      Context: Already in repo root.
-631 |      Definition of Done: Add hyperlink once docs moved to README.
-632 |      Status Note: Pending update.
-633 | [ ] RL-002 Link to tweetnacl documentation.
-634 |      Context: Crypto functions reference.
-635 |      Definition of Done: Provide URL.
-636 |      Status Note: Pending.
-637 | [ ] RL-003 Link to argon2 npm documentation.
-638 |      Context: Password hashing reference.
-639 |      Definition of Done: Provide URL.
-640 |      Status Note: Pending.
-641 | [ ] RL-004 Link to jsonwebtoken usage guide.
-642 |      Context: JWT best practices.
-643 |      Definition of Done: Provide URL.
-644 |      Status Note: Pending.
-645 | [ ] RL-005 Link to pg module documentation.
-646 |      Context: Database operations.
-647 |      Definition of Done: Provide URL.
-648 |      Status Note: Pending.
-649 | [ ] RL-006 Link to Socket.io docs.
-650 |      Context: Real-time features.
-651 |      Definition of Done: Provide URL.
-652 |      Status Note: Pending.
-653 | [ ] RL-007 Link to security best practices (OWASP).
-654 |      Context: General security posture.
-655 |      Definition of Done: Provide URL.
-656 |      Status Note: Pending.
-657 | [ ] RL-008 Link to PostgreSQL documentation for gen_random_uuid.
-658 |      Context: DB functions.
-659 |      Definition of Done: Provide URL.
-660 |      Status Note: Pending.
-661 | [ ] RL-009 Link to password policy guidelines.
-662 |      Context: Auth requirements.
-663 |      Definition of Done: Provide URL.
-664 |      Status Note: Pending.
-665 | [ ] RL-010 Link to WebCrypto API docs (compare with tweetnacl).
-666 |      Context: Future evaluation.
-667 |      Definition of Done: Provide URL.
-668 |      Status Note: Pending.
-669 | [ ] RL-011 Link to Docker documentation.
-670 |      Context: Ops tasks.
-671 |      Definition of Done: Provide URL.
-672 |      Status Note: Pending.
-673 | [ ] RL-012 Link to GitHub Actions documentation.
-674 |      Context: CI pipeline.
-675 |      Definition of Done: Provide URL.
-676 |      Status Note: Pending.
+629 | [x] RL-001 Link to Docs.md (primary PRD/TRD).
+630 |      Context: Already in repo root; reference path `Docs.md`.
+631 |      Definition of Done: Hyperlink recorded as `./Docs.md`.
+632 |      Status Note: Completed 2025-11-10 after repository review.
+633 | [x] RL-002 Link to tweetnacl documentation.
+634 |      Context: Crypto functions reference for nacl.box usage.
+635 |      Definition of Done: https://github.com/dchest/tweetnacl-js#readme
+636 |      Status Note: Completed 2025-11-10.
+637 | [x] RL-003 Link to argon2 npm documentation.
+638 |      Context: Password hashing reference for backend auth.
+639 |      Definition of Done: https://github.com/ranisalt/node-argon2#readme
+640 |      Status Note: Completed 2025-11-10.
+641 | [x] RL-004 Link to jsonwebtoken usage guide.
+642 |      Context: JWT best practices for token issuance.
+643 |      Definition of Done: https://github.com/auth0/node-jsonwebtoken#readme
+644 |      Status Note: Completed 2025-11-10.
+645 | [x] RL-005 Link to pg module documentation.
+646 |      Context: Database operations and connection pooling.
+647 |      Definition of Done: https://node-postgres.com/
+648 |      Status Note: Completed 2025-11-10.
+649 | [x] RL-006 Link to Socket.io docs.
+650 |      Context: Real-time messaging reference for client/admin.
+651 |      Definition of Done: https://socket.io/docs/v4/
+652 |      Status Note: Completed 2025-11-10.
+653 | [x] RL-007 Link to security best practices (OWASP).
+654 |      Context: General security posture guidance.
+655 |      Definition of Done: https://owasp.org/www-project-top-ten/
+656 |      Status Note: Completed 2025-11-10.
+657 | [x] RL-008 Link to PostgreSQL documentation for gen_random_uuid.
+658 |      Context: DB function reference for UUID generation.
+659 |      Definition of Done: https://www.postgresql.org/docs/current/functions-uuid.html
+660 |      Status Note: Completed 2025-11-10.
+661 | [x] RL-009 Link to password policy guidelines.
+662 |      Context: Auth requirements baseline reference.
+663 |      Definition of Done: https://pages.nist.gov/800-63-3/sp800-63b.html
+664 |      Status Note: Completed 2025-11-10.
+665 | [x] RL-010 Link to WebCrypto API docs (compare with tweetnacl).
+666 |      Context: Future evaluation for alternative crypto primitives.
+667 |      Definition of Done: https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API
+668 |      Status Note: Completed 2025-11-10.
+669 | [x] RL-011 Link to Docker documentation.
+670 |      Context: Ops tasks and container management reference.
+671 |      Definition of Done: https://docs.docker.com/
+672 |      Status Note: Completed 2025-11-10.
+673 | [x] RL-012 Link to GitHub Actions documentation.
+674 |      Context: CI pipeline planning.
+675 |      Definition of Done: https://docs.github.com/en/actions
+676 |      Status Note: Completed 2025-11-10.
 677 | ---
 678 | SECTION O: RISK REGISTER (BACKLOG ID PREFIX RK)
 679 | Summary: Track potential risks and mitigation strategies.
@@ -759,54 +759,54 @@
 728 | ---
 729 | SECTION P: GLOSSARY (BACKLOG ID PREFIX GL)
 730 | Summary: Define recurring terms for clarity (populate over time).
-731 | [ ] GL-001 Term Entry: User - standard end user who sends/receives messages.
-732 |      Context: Add details referencing Docs.md 1.2.
-733 |      Definition of Done: Provide formal definition.
-734 |      Status Note: Pending.
-735 | [ ] GL-002 Term Entry: Admin - master administrator with decryption ability.
-736 |      Context: Reference Docs.md 1.2.
-737 |      Definition of Done: Provide formal definition.
-738 |      Status Note: Pending.
-739 | [ ] GL-003 Term Entry: payload_recipient - encrypted message for recipient.
-740 |      Context: TRD Section 2.3.
-741 |      Definition of Done: Provide description.
-742 |      Status Note: Pending.
-743 | [ ] GL-004 Term Entry: payload_admin - encrypted message for admin.
-744 |      Context: TRD Section 2.3.
-745 |      Definition of Done: Provide description.
-746 |      Status Note: Pending.
-747 | [ ] GL-005 Term Entry: nonce - number used once for encryption.
-748 |      Context: TRD Step 3.5.
-749 |      Definition of Done: Provide description.
-750 |      Status Note: Pending.
-751 | [ ] GL-006 Term Entry: Hybrid Admin-Key model.
-752 |      Context: Docs.md description.
-753 |      Definition of Done: Provide summary.
-754 |      Status Note: Pending.
-755 | [ ] GL-007 Term Entry: Zero-knowledge server.
-756 |      Context: Server holds only encrypted data.
-757 |      Definition of Done: Provide definition.
-758 |      Status Note: Pending.
-759 | [ ] GL-008 Term Entry: nacl.box.
-760 |      Context: Crypto primitive used.
-761 |      Definition of Done: Provide description.
-762 |      Status Note: Pending.
-763 | [ ] GL-009 Term Entry: Argon2.
-764 |      Context: Password hashing algorithm.
-765 |      Definition of Done: Provide description.
-766 |      Status Note: Pending.
-767 | [ ] GL-010 Term Entry: JWT.
-768 |      Context: Authentication tokens.
-769 |      Definition of Done: Provide description.
-770 |      Status Note: Pending.
-771 | [ ] GL-011 Term Entry: Socket.io.
-772 |      Context: Real-time communication library.
-773 |      Definition of Done: Provide description.
-774 |      Status Note: Pending.
-775 | [ ] GL-012 Term Entry: Admin Panel.
-776 |      Context: Separate SPA for moderation.
-777 |      Definition of Done: Provide description.
-778 |      Status Note: Pending.
+731 | [x] GL-001 Term Entry: User - standard end user who sends/receives messages.
+732 |      Context: Derived from Docs.md Section 1.2 persona summary.
+733 |      Definition of Done: Authenticated participant whose device generates and stores their private key while consenting to admin oversight.
+734 |      Status Note: Completed 2025-11-10.
+735 | [x] GL-002 Term Entry: Admin - master administrator with decryption ability.
+736 |      Context: Docs.md Section 1.2 administrator persona.
+737 |      Definition of Done: Designated moderator holding an offline master secret key to decrypt any conversation via the admin panel.
+738 |      Status Note: Completed 2025-11-10.
+739 | [x] GL-003 Term Entry: payload_recipient - encrypted message for recipient.
+740 |      Context: TRD Section 2.3 database schema.
+741 |      Definition of Done: Base64-encoded nacl.box ciphertext targeted to the recipient’s public key for chat decryption.
+742 |      Status Note: Completed 2025-11-10.
+743 | [x] GL-004 Term Entry: payload_admin - encrypted message for admin.
+744 |      Context: TRD Section 2.3 and crypto flow Step 3.5.
+745 |      Definition of Done: Base64-encoded nacl.box ciphertext generated with the admin public key enabling moderation review.
+746 |      Status Note: Completed 2025-11-10.
+747 | [x] GL-005 Term Entry: nonce - number used once for encryption.
+748 |      Context: TRD Step 3.5 message send sequence.
+749 |      Definition of Done: 24-byte nacl.randomBytes value ensuring uniqueness per message for payload_recipient/payload_admin pairs.
+750 |      Status Note: Completed 2025-11-10.
+751 | [x] GL-006 Term Entry: Hybrid Admin-Key model.
+752 |      Context: Docs.md Introduction describing encryption strategy.
+753 |      Definition of Done: Architecture combining user-to-user secrecy with parallel admin-access ciphertext, diverging from traditional E2EE.
+754 |      Status Note: Completed 2025-11-10.
+755 | [x] GL-007 Term Entry: Zero-knowledge server.
+756 |      Context: Docs.md Section 2.1 system overview.
+757 |      Definition of Done: Backend that stores only encrypted blobs without ever handling plaintext or private keys.
+758 |      Status Note: Completed 2025-11-10.
+759 | [x] GL-008 Term Entry: nacl.box.
+760 |      Context: TRD Section 3.1 crypto primitive.
+761 |      Definition of Done: TweetNaCl public-key authenticated encryption function accepting message, nonce, recipient public key, and sender secret key.
+762 |      Status Note: Completed 2025-11-10.
+763 | [x] GL-009 Term Entry: Argon2.
+764 |      Context: Docs.md Section 2.2 recommended stack.
+765 |      Definition of Done: Memory-hard password hashing and key-derivation algorithm used for auth passwords and private-key wrapping.
+766 |      Status Note: Completed 2025-11-10.
+767 | [x] GL-010 Term Entry: JWT.
+768 |      Context: Backend authentication mechanism.
+769 |      Definition of Done: JSON Web Token signed with server secret to authenticate API and Socket.io requests.
+770 |      Status Note: Completed 2025-11-10.
+771 | [x] GL-011 Term Entry: Socket.io.
+772 |      Context: Real-time communication library used across apps.
+773 |      Definition of Done: WebSocket abstraction delivering authenticated rooms and message broadcast features for chat and admin monitoring.
+774 |      Status Note: Completed 2025-11-10.
+775 | [x] GL-012 Term Entry: Admin Panel.
+776 |      Context: Separate SPA described in Docs.md Sections 1.3 and 2.1.
+777 |      Definition of Done: Dedicated interface where admin authenticates, loads master secret key, and reviews decrypted conversations.
+778 |      Status Note: Completed 2025-11-10.
 779 | ---
 780 | SECTION Q: QUESTIONS FOR PRODUCT OWNER (BACKLOG ID PREFIX QP)
 781 | Summary: Outstanding clarifications needed.
@@ -921,4 +921,21 @@
 890 | [*] AP-008 Encourage peer review for security-sensitive changes.
 891 | [*] AP-009 Align front-end developments with backend API contracts as they stabilize.
 892 | [*] AP-010 Continue referencing Docs.md for authoritative requirements.
+893 | ---
+894 | SECTION T: PRODUCTION READINESS BACKLOG (BACKLOG ID PREFIX PR)
+895 | Summary: Consolidated view of all remaining tasks required before launch readiness.
+896 | [ ] PR-001 Backend Authentication Hardening – complete BF-A-005, BF-A-006, BF-A-007, BF-A-008, BF-A-009, BF-A-010, BF-A-011, BF-A-012.
+897 | [ ] PR-002 Configuration & Directory Documentation – deliver BF-C-003 and BF-C-004.
+898 | [ ] PR-003 Messaging Service Enhancements – close BF-M-004, BF-M-006, BF-M-007, BF-M-009, BF-M-010, BF-M-011, BF-M-012.
+899 | [ ] PR-004 Real-time & Socket Reliability – address BF-R-005, BF-R-007, BF-R-008, BF-R-009, BF-R-010, BF-R-011, BF-R-012.
+900 | [ ] PR-005 Backend Infrastructure & Tooling – fulfill BF-I-004, BF-I-005, BF-I-006, BF-I-007, BF-I-008, BF-I-009, BF-I-010, BF-I-011, BF-I-012.
+901 | [ ] PR-006 Client Experience & Testing – complete CL-010, CL-011, CL-012.
+902 | [ ] PR-007 Admin Platform Maturity – finish AD-007, AD-008, AD-009, AD-010, AD-012.
+903 | [ ] PR-008 Cryptography Governance – wrap up CU-004, CU-005, CU-006, CU-007, CU-008, CU-009, CU-010, CU-011, CU-012.
+904 | [ ] PR-009 Operations & Developer Experience – execute OP-004, OP-005, OP-006, OP-007, OP-008, OP-009, OP-010, OP-011, OP-012.
+905 | [ ] PR-010 Compliance & Cross-Cutting Policies – resolve CC-001, CC-002, CC-003, CC-004, CC-005, CC-006, CC-007, CC-008, CC-009, CC-010, CC-011, CC-012.
+906 | [ ] PR-011 Risk Register Mitigations – document and implement mitigations for RK-001 through RK-012.
+907 | [ ] PR-012 Product Owner Clarifications – obtain decisions for QP-001 through QP-012.
+908 | [ ] PR-013 Final Milestones – deliver TL-006, TL-007, TL-008, TL-009, TL-010, TL-011, TL-012.
+909 |
 

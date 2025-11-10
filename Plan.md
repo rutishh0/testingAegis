@@ -457,10 +457,10 @@
 426 |      Context: Align with BF-I-001 but tracked separately for documentation.
 427 |      Definition of Done: File present with comments.
 428 |      Status Note: Completed with env.example enumerating DATABASE_URL, JWT_SECRET, ADMIN_API_TOKEN, etc.
-429 | [~] OP-002 Draft Dockerfile and docker-compose for backend + Postgres.
+429 | [x] OP-002 Draft Dockerfile and docker-compose for backend + Postgres.
 430 |      Context: Simplifies local setup.
 431 |      Definition of Done: Compose spins up API and DB, instructions provided.
-432 |      Status Note: Work started; Docker baseline pending completion.
+432 |      Status Note: Completed with Dockerfile, .dockerignore, README instructions, wait-for-db script.
 433 | [x] OP-003 Configure npm scripts for lint, test, dev, prod.
 434 |      Context: Developer workflow.
 435 |      Definition of Done: Scripts documented and functional.

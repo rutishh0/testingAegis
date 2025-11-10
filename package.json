@@ -8,6 +8,7 @@
     "dev": "node server.js",
     "test": "jest --runInBand",
     "db:init": "node scripts/db/init.js",
+    "db:wait": "node scripts/db/waitForDb.js",
     "db:seed:admin": "node scripts/db/seedAdminConfig.js"
   },
   "dependencies": {

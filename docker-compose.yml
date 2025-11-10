@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:postgres@db:5432/aegis
+      DB_SSL: "false"
+      JWT_SECRET: changeme
+      JWT_EXPIRES_IN: 24h
+      ADMIN_API_TOKEN: changeme
+      ADMIN_PUBLIC_KEY: changeme_admin_public_key
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    command: >
+      sh -c "npm run db:wait &&
+             npm run db:init &&
+             node server.js"
+
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aegis
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+

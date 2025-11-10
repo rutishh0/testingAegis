@@ -97,14 +97,14 @@
 085 |      Context: Determine default expiration (e.g., 24h) and documentation.
 086 |      Definition of Done: Configurable via env var with sensible default.
 087 |      Status Note: Pending.
-088 | [ ] BF-A-006 Implement error normalization for auth routes.
+088 | [x] BF-A-006 Implement error normalization for auth routes.
 089 |      Context: Provide consistent responses to invalid credentials/missing fields.
 090 |      Definition of Done: Shared helper ensures no sensitive info leaked.
-091 |      Status Note: Pending.
-092 | [ ] BF-A-007 Add logging hooks for auth success/failure without storing raw passwords.
+091 |      Status Note: Completed via createHttpError wrapping in register/login catch blocks to sanitize 500 responses.
+092 | [x] BF-A-007 Add logging hooks for auth success/failure without storing raw passwords.
 093 |      Context: Observability requirement.
 094 |      Definition of Done: Use console/info wrappers or integrate future logger.
-095 |      Status Note: Pending.
+095 |      Status Note: Completed with logger.info/warn instrumentation in register/login handlers.
 096 | [ ] BF-A-008 Document auth flow in README or inline comments referencing Docs.md.
 097 |      Context: Maintains developer understanding.
 098 |      Definition of Done: Comments or doc section summarizing steps.
@@ -117,14 +117,14 @@
 105 |      Context: Security best practice.
 106 |      Definition of Done: Document guidelines even if not implemented yet.
 107 |      Status Note: Pending documentation.
-108 | [ ] BF-A-011 Evaluate rate limiting for auth endpoints (future improvement).
+108 | [x] BF-A-011 Evaluate rate limiting for auth endpoints (future improvement).
 109 |      Context: Prevent brute-force attempts.
 110 |      Definition of Done: Add plan note with candidate libraries.
-111 |      Status Note: Document soon.
-112 | [ ] BF-A-012 Ensure password length and complexity validation at server side.
+111 |      Status Note: Completed with express-rate-limit (15m/20 requests) applied to register/login endpoints.
+112 | [x] BF-A-012 Ensure password length and complexity validation at server side.
 113 |      Context: Security baseline complementing client checks.
 114 |      Definition of Done: Implement in register/login validators.
-115 |      Status Note: To refurbish once login built.
+115 |      Status Note: Completed with regex-based complexity enforcement in register handler.
 116 | ---
 117 | SECTION C.1: BACKEND FOUNDATION - CONFIG & DIRECTORY (BACKLOG ID PREFIX BF-C)
 118 | Summary: Provide endpoints that expose admin public key and user directory while respecting access controls.
@@ -261,30 +261,30 @@
 230 |      Context: Support initial setup.
 231 |      Definition of Done: Script takes env var or argument to insert key.
 232 |      Status Note: Completed via scripts/db/seedAdminConfig.js using ADMIN_PUBLIC_KEY env.
-233 | [ ] BF-I-004 Implement structured logging utility (console wrapper).
+233 | [x] BF-I-004 Implement structured logging utility (console wrapper).
 234 |      Context: Standardize log format.
 235 |      Definition of Done: Utility exported and used in server.
-236 |      Status Note: Pending.
-237 | [ ] BF-I-005 Introduce centralized error handler middleware.
+236 |      Status Note: Completed with utils/logger.js and server.js migration to logger calls.
+237 | [x] BF-I-005 Introduce centralized error handler middleware.
 238 |      Context: Clean error responses and logging.
 239 |      Definition of Done: Express error handler capturing thrown errors.
-240 |      Status Note: Pending.
-241 | [ ] BF-I-006 Add health check enhancements (DB connectivity verification).
+240 |      Status Note: Completed with utils/errorHandler.js and global app.use(errorHandler) wiring.
+241 | [x] BF-I-006 Add health check enhancements (DB connectivity verification).
 242 |      Context: Provide more robust /health endpoint.
 243 |      Definition of Done: Endpoint checks pool.query('SELECT 1').
-244 |      Status Note: Completed with async health check verifying DB connectivity.
-245 | [ ] BF-I-007 Document environment setup in README (Node version, Postgres, etc.).
+244 |      Status Note: Completed with async SELECT 1 as result check and standardized success response.
+245 | [x] BF-I-007 Document environment setup in README (Node version, Postgres, etc.).
 246 |      Context: Developer onboarding.
 247 |      Definition of Done: README updates with clear steps.
-248 |      Status Note: Pending.
+248 |      Status Note: Completed with backend environment setup section covering .env creation, DB provisioning, and admin key guidance.
 249 | [ ] BF-I-008 Evaluate use of pg connection pooling parameters (max, idleTimeout).
 250 |      Context: Production readiness.
 251 |      Definition of Done: Document or configure defaults.
 252 |      Status Note: Pending.
-253 | [ ] BF-I-009 Establish linting/formatting config (ESLint, Prettier).
+253 | [x] BF-I-009 Establish linting/formatting config (ESLint, Prettier).
 254 |      Context: Code quality.
 255 |      Definition of Done: Config files added, npm scripts updated.
-256 |      Status Note: Pending.
+256 |      Status Note: Completed with .eslintrc.json, .prettierrc.json, and lint/format npm scripts.
 257 | [ ] BF-I-010 Set up test harness (Jest or Vitest) for backend.
 258 |      Context: Automated testing baseline.
 259 |      Definition of Done: Tests run via npm script, sample test created.
@@ -814,10 +814,10 @@
 783 |      Context: Impacts database and UI.
 784 |      Definition of Done: Product owner answer recorded.
 785 |      Status Note: Pending.
-786 | [ ] QP-002 Determine password complexity requirements.
+786 | [x] QP-002 Determine password complexity requirements.
 787 |      Context: Auth validation.
 788 |      Definition of Done: Requirements documented.
-789 |      Status Note: Pending.
+789 |      Status Note: Adopted minimum 8-char mixed case/number/special policy implemented server-side; awaiting PO confirmation if changes needed.
 790 | [ ] QP-003 Confirm JWT expiry timeframe and refresh policy.
 791 |      Context: Session management.
 792 |      Definition of Done: Guidance documented.

@@ -16,21 +16,37 @@ Project Aegis is a hybrid encrypted messaging platform described in `Docs.md`. T
 - PostgreSQL 15+
 - Optional: Docker 24+ and Docker Compose v2
 
-## Environment Variables
+## Backend Environment Setup
 
-Copy `env.example` to `.env` (backend) and add values:
+1. **Create a local `.env` file**
+
+   Copy the provided template and fill in the values that match your environment:
 
 ```bash
 cp env.example .env
 ```
 
-Key variables (see `env.example` for defaults):
+2. **Supply the required environment variables**
 
-- `DATABASE_URL` – Postgres connection string
-- `DB_SSL` – `"true"` for SSL connections, otherwise `"false"`
-- `JWT_SECRET` / `JWT_EXPIRES_IN` – User auth token config
-- `ADMIN_API_TOKEN` – Shared secret for admin API access
-- `ADMIN_PUBLIC_KEY` – Base64 public key generated via `generateAdminKeys.js`
+   | Variable | Description |
+   | --- | --- |
+   | `DATABASE_URL` | PostgreSQL connection string (e.g. `postgres://user:pass@localhost:5432/aegis`) |
+   | `DB_SSL` | Set to `"true"` when connecting to managed databases that require SSL |
+   | `JWT_SECRET` | Random string used to sign user JWTs |
+   | `JWT_EXPIRES_IN` | Optional JWT lifetime override (defaults to `24h`) |
+   | `ADMIN_API_TOKEN` | Shared bearer token for admin-only REST endpoints |
+   | `ADMIN_PUBLIC_KEY` | Base64 admin public key generated via `generateAdminKeys.js` |
+   | `CORS_ORIGIN` | (Optional) Allowed origin for the SPA(s); defaults to `*` |
+
+3. **Provision the database**
+
+   - Create a local PostgreSQL database (or use Docker compose).
+   - Ensure the account referenced in `DATABASE_URL` has privileges to create tables.
+   - Run the initialization scripts (`npm run db:init`, `npm run db:seed:admin`) before starting the API.
+
+4. **Admin key generation**
+
+   Run `node generateAdminKeys.js` to produce the admin key pair. Insert the public key via `ADMIN_PUBLIC_KEY` or `npm run db:seed:admin`. Store the secret key outside of the repository and infrastructure hosts.
 
 ## Local Development (Node)
 
@@ -106,6 +122,13 @@ Backend:
 
 ```bash
 npm test
+```
+
+Linting / formatting:
+
+```bash
+npm run lint
+npm run format
 ```
 
 Client/Admin (Vitest scaffolding):

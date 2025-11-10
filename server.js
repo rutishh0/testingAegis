@@ -2,10 +2,35 @@ require('dotenv').config();
 
 const http = require('http');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 const { Pool } = require('pg');
 const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
+const logger = require('./utils/logger');
+const errorHandler = require('./utils/errorHandler');
+
+function createHttpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+const passwordComplexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function isPasswordComplex(password) {
+  return passwordComplexityRegex.test(password);
+}
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next) => {
+    next(createHttpError(429, 'Too many authentication attempts. Please try again later.'));
+  },
+});
 
 // Database connection pool
 const pool = new Pool({
@@ -30,7 +55,7 @@ const io = new Server(httpServer, {
 });
 
 io.on('connection', (socket) => {
-  console.log('Socket connected:', socket.id);
+  logger.info('Socket connected', { socketId: socket.id });
 
   socket.on('auth:join', async (authPayload) => {
     try {
@@ -51,7 +76,7 @@ io.on('connection', (socket) => {
       socket.join(decoded.sub);
       socket.emit('auth:ack', { status: 'joined', userId: decoded.sub });
     } catch (error) {
-      console.error('Socket authentication error:', error);
+      logger.error('Socket authentication error', error);
       socket.emit('auth:error', { message: 'Authentication failed.' });
     }
   });
@@ -80,13 +105,13 @@ io.on('connection', (socket) => {
       socket.join('admin');
       socket.emit('admin:ack', { status: 'joined' });
     } catch (error) {
-      console.error('Admin socket authentication error:', error);
+      logger.error('Admin socket authentication error', error);
       socket.emit('admin:error', { message: 'Authentication failed.' });
     }
   });
 
   socket.on('disconnect', () => {
-    console.log('Socket disconnected:', socket.id);
+    logger.info('Socket disconnected', { socketId: socket.id });
   });
 });
 
@@ -117,14 +142,14 @@ function getAdminApiToken() {
 }
 
 async function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization || '';
-  const [scheme, token] = authHeader.split(' ');
-
-  if (scheme !== 'Bearer' || !token) {
-    return res.status(401).json({ message: 'Authentication required.' });
-  }
-
   try {
+    const authHeader = req.headers.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      throw createHttpError(401, 'Authentication required.');
+    }
+
     const decoded = jwt.verify(token, getJwtSecret());
 
     const query = `
@@ -137,7 +162,7 @@ async function authenticate(req, res, next) {
     const user = rows[0];
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid authentication token.' });
+      throw createHttpError(401, 'Invalid authentication token.');
     }
 
     req.user = {
@@ -151,61 +176,89 @@ async function authenticate(req, res, next) {
 
     return next();
   } catch (error) {
-    console.error('Authentication error:', error);
-    return res.status(401).json({ message: 'Invalid authentication token.' });
+    if (
+      error.statusCode
+    ) {
+      return next(error);
+    }
+
+    if (
+      error.name === 'JsonWebTokenError' ||
+      error.name === 'TokenExpiredError' ||
+      error.message === 'invalid signature'
+    ) {
+      return next(createHttpError(401, 'Invalid authentication token.'));
+    }
+
+    if (error.message === 'JWT_SECRET environment variable is not set.') {
+      return next(createHttpError(500, 'Authentication service misconfigured.'));
+    }
+
+    return next(error);
   }
 }
 
 async function authenticateAdmin(req, res, next) {
-  const authHeader = req.headers.authorization || '';
-  const [scheme, token] = authHeader.split(' ');
-
-  if (scheme !== 'Bearer' || !token) {
-    return res.status(401).json({ message: 'Admin authentication required.' });
-  }
-
-  let expectedToken;
   try {
-    expectedToken = getAdminApiToken();
+    const authHeader = req.headers.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+
+    if (scheme !== 'Bearer' || !token) {
+      throw createHttpError(401, 'Admin authentication required.');
+    }
+
+    const expectedToken = getAdminApiToken();
+
+    if (token !== expectedToken) {
+      throw createHttpError(401, 'Invalid admin credentials.');
+    }
+
+    req.admin = { isAdmin: true };
+    req.token = token;
+    return next();
   } catch (error) {
-    console.error('Admin authentication misconfigured:', error);
-    return res.status(500).json({ message: 'Admin authentication misconfigured.' });
-  }
+    if (error.statusCode) {
+      return next(error);
+    }
 
-  if (token !== expectedToken) {
-    return res.status(401).json({ message: 'Invalid admin credentials.' });
-  }
+    if (error.message === 'ADMIN_API_TOKEN environment variable is not set.') {
+      return next(createHttpError(500, 'Admin authentication misconfigured.'));
+    }
 
-  req.admin = { isAdmin: true };
-  req.token = token;
-  return next();
+    return next(error);
+  }
 }
 
 // Placeholder controller stubs for API endpoints
-async function registerUser(req, res) {
-  const { username, password, publicKey, encryptedPrivateKey } = req.body || {};
-
-  if (
-    typeof username !== 'string' ||
-    typeof password !== 'string' ||
-    typeof publicKey !== 'string' ||
-    typeof encryptedPrivateKey !== 'string'
-  ) {
-    return res.status(400).json({
-      message:
-        'Invalid request body. Expected username, password, publicKey, and encryptedPrivateKey as strings.',
-    });
-  }
-
-  const normalizedUsername = username.trim();
-
-  if (!normalizedUsername || !password.trim() || !publicKey.trim() || !encryptedPrivateKey.trim()) {
-    return res.status(400).json({
-      message: 'All fields (username, password, publicKey, encryptedPrivateKey) are required.',
-    });
-  }
-
+async function registerUser(req, res, next) {
   try {
+    const { username, password, publicKey, encryptedPrivateKey } = req.body || {};
+
+    if (
+      typeof username !== 'string' ||
+      typeof password !== 'string' ||
+      typeof publicKey !== 'string' ||
+      typeof encryptedPrivateKey !== 'string'
+    ) {
+      throw createHttpError(
+        400,
+        'Invalid request body. Expected username, password, publicKey, and encryptedPrivateKey as strings.'
+      );
+    }
+
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername || !password.trim() || !publicKey.trim() || !encryptedPrivateKey.trim()) {
+      throw createHttpError(
+        400,
+        'All fields (username, password, publicKey, encryptedPrivateKey) are required.'
+      );
+    }
+
+    if (!isPasswordComplex(password)) {
+      throw createHttpError(400, 'Password does not meet complexity requirements.');
+    }
+
     const passwordHash = await argon2.hash(password);
 
     const insertQuery = `
@@ -221,40 +274,49 @@ async function registerUser(req, res) {
       encryptedPrivateKey,
     ]);
 
-    const createdUser = rows[0];
+    const newUser = rows[0];
+
+    logger.info(`New user registered: ${newUser.username} (ID: ${newUser.user_id})`);
 
     return res.status(201).json({
-      userId: createdUser.user_id,
-      username: createdUser.username,
-      publicKey: createdUser.public_key,
-      encryptedPrivateKey: createdUser.encrypted_private_key,
+      userId: newUser.user_id,
+      username: newUser.username,
+      publicKey: newUser.public_key,
+      encryptedPrivateKey: newUser.encrypted_private_key,
     });
   } catch (error) {
+    logger.warn(
+      `Auth failure for user: ${typeof username === 'string' ? username : 'unknown'} - ${error.message}`
+    );
+
     if (error.code === '23505') {
-      return res.status(409).json({ message: 'Username already exists.' });
+      return next(createHttpError(409, 'Username already exists.'));
     }
 
-    console.error('Error registering user:', error);
-    return res.status(500).json({ message: 'Failed to register user.' });
+    if (!error.statusCode) {
+      const sanitizedError = createHttpError(500, 'Failed to register user.');
+      sanitizedError.cause = error;
+      return next(sanitizedError);
+    }
+
+    return next(error);
   }
 }
 
-async function loginUser(req, res) {
-  const { username, password } = req.body || {};
-
-  if (typeof username !== 'string' || typeof password !== 'string') {
-    return res
-      .status(400)
-      .json({ message: 'Invalid request body. Expected username and password as strings.' });
-  }
-
-  const normalizedUsername = username.trim();
-
-  if (!normalizedUsername || !password.trim()) {
-    return res.status(400).json({ message: 'Username and password are required.' });
-  }
-
+async function loginUser(req, res, next) {
   try {
+    const { username, password } = req.body || {};
+
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      throw createHttpError(400, 'Invalid request body. Expected username and password as strings.');
+    }
+
+    const normalizedUsername = username.trim();
+
+    if (!normalizedUsername || !password.trim()) {
+      throw createHttpError(400, 'Username and password are required.');
+    }
+
     const query = `
       SELECT user_id, username, password_hash, public_key, encrypted_private_key
       FROM users
@@ -266,13 +328,13 @@ async function loginUser(req, res) {
     const user = rows[0];
 
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      throw createHttpError(401, 'Invalid credentials.');
     }
 
     const isPasswordValid = await argon2.verify(user.password_hash, password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials.' });
+      throw createHttpError(401, 'Invalid credentials.');
     }
 
     let token;
@@ -283,9 +345,10 @@ async function loginUser(req, res) {
         username: user.username,
       });
     } catch (error) {
-      console.error('Error creating JWT:', error);
-      return res.status(500).json({ message: 'Authentication service misconfigured.' });
+      return next(createHttpError(500, 'Authentication service misconfigured.'));
     }
+
+    logger.info(`User login successful: ${user.username} (ID: ${user.user_id})`);
 
     return res.json({
       token,
@@ -295,25 +358,38 @@ async function loginUser(req, res) {
       encryptedPrivateKey: user.encrypted_private_key,
     });
   } catch (error) {
-    console.error('Error logging in user:', error);
-    return res.status(500).json({ message: 'Failed to log in.' });
+    logger.warn(
+      `Auth failure for user: ${typeof username === 'string' ? username : 'unknown'} - ${error.message}`
+    );
+
+    if (!error.statusCode) {
+      const sanitizedError = createHttpError(500, 'Failed to log in.');
+      sanitizedError.cause = error;
+      return next(sanitizedError);
+    }
+
+    return next(error);
   }
 }
 
-async function getAuthenticatedUser(req, res) {
-  if (!req.user) {
-    return res.status(500).json({ message: 'Authentication context missing.' });
-  }
+async function getAuthenticatedUser(req, res, next) {
+  try {
+    if (!req.user) {
+      throw createHttpError(500, 'Authentication context missing.');
+    }
 
-  return res.json({
-    userId: req.user.userId,
-    username: req.user.username,
-    publicKey: req.user.publicKey,
-    encryptedPrivateKey: req.user.encryptedPrivateKey,
-  });
+    return res.json({
+      userId: req.user.userId,
+      username: req.user.username,
+      publicKey: req.user.publicKey,
+      encryptedPrivateKey: req.user.encryptedPrivateKey,
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
-async function getPublicConfig(req, res) {
+async function getPublicConfig(req, res, next) {
   try {
     const query = `
       SELECT admin_public_key
@@ -326,19 +402,18 @@ async function getPublicConfig(req, res) {
     const config = rows[0];
 
     if (!config) {
-      return res.status(404).json({ message: 'Admin configuration not found.' });
+      throw createHttpError(404, 'Admin configuration not found.');
     }
 
     return res.json({
       adminPublicKey: config.admin_public_key,
     });
   } catch (error) {
-    console.error('Error fetching public config:', error);
-    return res.status(500).json({ message: 'Failed to load configuration.' });
+    return next(error);
   }
 }
 
-async function listUsers(req, res) {
+async function listUsers(req, res, next) {
   try {
     const query = `
       SELECT user_id, username, public_key
@@ -356,24 +431,23 @@ async function listUsers(req, res) {
 
     return res.json({ users });
   } catch (error) {
-    console.error('Error listing users:', error);
-    return res.status(500).json({ message: 'Failed to fetch users.' });
+    return next(error);
   }
 }
 
-async function getUserMessages(req, res) {
-  if (!req.user) {
-    return res.status(500).json({ message: 'Authentication context missing.' });
-  }
-
-  const { userId: currentUserId } = req.user;
-  const { userId: targetUserId } = req.params;
-
-  if (!targetUserId || typeof targetUserId !== 'string') {
-    return res.status(400).json({ message: 'Invalid target user id.' });
-  }
-
+async function getUserMessages(req, res, next) {
   try {
+    if (!req.user) {
+      throw createHttpError(500, 'Authentication context missing.');
+    }
+
+    const { userId: currentUserId } = req.user;
+    const { userId: targetUserId } = req.params;
+
+    if (!targetUserId || typeof targetUserId !== 'string') {
+      throw createHttpError(400, 'Invalid target user id.');
+    }
+
     const userCheck = await pool.query(
       `
         SELECT user_id
@@ -384,7 +458,7 @@ async function getUserMessages(req, res) {
     );
 
     if (userCheck.rowCount === 0) {
-      return res.status(404).json({ message: 'Target user not found.' });
+      throw createHttpError(404, 'Target user not found.');
     }
 
     const { rows } = await pool.query(
@@ -416,63 +490,65 @@ async function getUserMessages(req, res) {
 
     return res.json({ messages });
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    return res.status(500).json({ message: 'Failed to fetch messages.' });
+    return next(error);
   }
 }
 
-async function postMessage(req, res) {
-  if (!req.user) {
-    return res.status(500).json({ message: 'Authentication context missing.' });
-  }
-
-  const { userId: senderId } = req.user;
-  const {
-    recipientId,
-    payload_recipient: payloadRecipient,
-    payloadRecipient: camelPayloadRecipient,
-    payload_admin: payloadAdmin,
-    payloadAdmin: camelPayloadAdmin,
-    nonce,
-  } = req.body || {};
-
-  const resolvedPayloadRecipient =
-    typeof payloadRecipient === 'string'
-      ? payloadRecipient
-      : typeof camelPayloadRecipient === 'string'
-      ? camelPayloadRecipient
-      : null;
-
-  const resolvedPayloadAdmin =
-    typeof payloadAdmin === 'string'
-      ? payloadAdmin
-      : typeof camelPayloadAdmin === 'string'
-      ? camelPayloadAdmin
-      : null;
-
-  if (
-    typeof recipientId !== 'string' ||
-    typeof resolvedPayloadRecipient !== 'string' ||
-    typeof resolvedPayloadAdmin !== 'string' ||
-    typeof nonce !== 'string'
-  ) {
-    return res.status(400).json({
-      message:
-        'Invalid request body. Expected recipientId, payload_recipient, payload_admin, and nonce as strings.',
-    });
-  }
-
-  if (!recipientId.trim() || !resolvedPayloadRecipient.trim() || !resolvedPayloadAdmin.trim() || !nonce.trim()) {
-    return res
-      .status(400)
-      .json({ message: 'All message fields (recipientId, payloads, nonce) are required.' });
-  }
-
-  if (recipientId === senderId) {
-    return res.status(400).json({ message: 'Cannot send messages to yourself.' });
-  }
-
+async function postMessage(req, res, next) {
   try {
+    if (!req.user) {
+      throw createHttpError(500, 'Authentication context missing.');
+    }
+
+    const { userId: senderId } = req.user;
+    const {
+      recipientId,
+      payload_recipient: payloadRecipient,
+      payloadRecipient: camelPayloadRecipient,
+      payload_admin: payloadAdmin,
+      payloadAdmin: camelPayloadAdmin,
+      nonce,
+    } = req.body || {};
+
+    const resolvedPayloadRecipient =
+      typeof payloadRecipient === 'string'
+        ? payloadRecipient
+        : typeof camelPayloadRecipient === 'string'
+        ? camelPayloadRecipient
+        : null;
+
+    const resolvedPayloadAdmin =
+      typeof payloadAdmin === 'string'
+        ? payloadAdmin
+        : typeof camelPayloadAdmin === 'string'
+        ? camelPayloadAdmin
+        : null;
+
+    if (
+      typeof recipientId !== 'string' ||
+      typeof resolvedPayloadRecipient !== 'string' ||
+      typeof resolvedPayloadAdmin !== 'string' ||
+      typeof nonce !== 'string'
+    ) {
+      throw createHttpError(
+        400,
+        'Invalid request body. Expected recipientId, payload_recipient, payload_admin, and nonce as strings.'
+      );
+    }
+
+    if (
+      !recipientId.trim() ||
+      !resolvedPayloadRecipient.trim() ||
+      !resolvedPayloadAdmin.trim() ||
+      !nonce.trim()
+    ) {
+      throw createHttpError(400, 'All message fields (recipientId, payloads, nonce) are required.');
+    }
+
+    if (recipientId === senderId) {
+      throw createHttpError(400, 'Cannot send messages to yourself.');
+    }
+
     const recipientResult = await pool.query(
       `
         SELECT user_id, username, public_key
@@ -483,7 +559,7 @@ async function postMessage(req, res) {
     );
 
     if (recipientResult.rowCount === 0) {
-      return res.status(404).json({ message: 'Recipient not found.' });
+      throw createHttpError(404, 'Recipient not found.');
     }
     const recipientRow = recipientResult.rows[0];
 
@@ -523,12 +599,11 @@ async function postMessage(req, res) {
 
     return res.status(201).json(responsePayload);
   } catch (error) {
-    console.error('Error posting message:', error);
-    return res.status(500).json({ message: 'Failed to send message.' });
+    return next(error);
   }
 }
 
-async function getAllMessagesForAdmin(req, res) {
+async function getAllMessagesForAdmin(req, res, next) {
   try {
     const { rows } = await pool.query(
       `
@@ -567,14 +642,13 @@ async function getAllMessagesForAdmin(req, res) {
 
     return res.json({ messages });
   } catch (error) {
-    console.error('Error fetching admin messages:', error);
-    return res.status(500).json({ message: 'Failed to fetch admin messages.' });
+    return next(error);
   }
 }
 
 // API routes
-app.post('/api/v1/auth/register', registerUser);
-app.post('/api/v1/auth/login', loginUser);
+app.post('/api/v1/auth/register', authLimiter, registerUser);
+app.post('/api/v1/auth/login', authLimiter, loginUser);
 app.get('/api/v1/auth/me', authenticate, getAuthenticatedUser);
 app.get('/api/v1/config', getPublicConfig);
 app.get('/api/v1/users', authenticate, listUsers);
@@ -583,20 +657,22 @@ app.post('/api/v1/messages', authenticate, postMessage);
 app.get('/api/v1/admin/messages', authenticateAdmin, getAllMessagesForAdmin);
 
 // Basic health check endpoint
-app.get('/health', async (req, res) => {
+app.get('/health', async (req, res, next) => {
   try {
-    await pool.query('SELECT 1');
-    res.json({ status: 'ok', database: 'reachable' });
+    await pool.query('SELECT 1 as result');
+    res.json({ status: 'ok', database: 'connected' });
   } catch (error) {
-    console.error('Health check failed:', error);
-    res.status(503).json({ status: 'error', database: 'unreachable' });
+    error.statusCode = error.statusCode || 503;
+    next(error);
   }
 });
+
+app.use(errorHandler);
 
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
   httpServer.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    logger.info('Server listening', { port: PORT });
   });
 }
 

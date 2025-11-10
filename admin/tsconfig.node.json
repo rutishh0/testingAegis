@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "lib": ["dom", "es2020"],
+    "target": "es2020",
+    "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "include": ["vite.config.ts"]
+}
+

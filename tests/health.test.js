@@ -19,7 +19,7 @@ describe('GET /health', () => {
   it('returns ok when database query succeeds', async () => {
     const response = await request(app).get('/health');
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: 'ok', database: 'reachable' });
+    expect(response.body).toEqual({ status: 'ok', database: 'connected' });
   });
 });
 

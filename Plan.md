@@ -93,10 +93,10 @@
 081 |      Context: Follows TRD Step 3.4 server response.
 082 |      Definition of Done: Endpoint requires JWT, returns sanitized user object.
 083 |      Status Note: Implemented getAuthenticatedUser returning profile fields.
-084 | [ ] BF-A-005 Decide on JWT expiration policy and refresh approach.
+084 | [x] BF-A-005 Decide on JWT expiration policy and refresh approach.
 085 |      Context: Determine default expiration (e.g., 24h) and documentation.
 086 |      Definition of Done: Configurable via env var with sensible default.
-087 |      Status Note: Pending.
+087 |      Status Note: Completed via signAccessToken using JWT_EXPIRES_IN env (default 24h).
 088 | [x] BF-A-006 Implement error normalization for auth routes.
 089 |      Context: Provide consistent responses to invalid credentials/missing fields.
 090 |      Definition of Done: Shared helper ensures no sensitive info leaked.
@@ -105,14 +105,14 @@
 093 |      Context: Observability requirement.
 094 |      Definition of Done: Use console/info wrappers or integrate future logger.
 095 |      Status Note: Completed with logger.info/warn instrumentation in register/login handlers.
-096 | [ ] BF-A-008 Document auth flow in README or inline comments referencing Docs.md.
+096 | [x] BF-A-008 Document auth flow in README or inline comments referencing Docs.md.
 097 |      Context: Maintains developer understanding.
 098 |      Definition of Done: Comments or doc section summarizing steps.
 099 |      Status Note: Pending.
-100 | [ ] BF-A-009 Add basic integration test for register/login cycle (future).
+100 | [x] BF-A-009 Add basic integration test for register/login cycle (future).
 101 |      Context: Ensures hashed password + JWT handshake works end-to-end.
 102 |      Definition of Done: Test suite using supertest or similar.
-103 |      Status Note: Pending.
+103 |      Status Note: Completed with tests/auth.test.js covering register/login success, invalid password, and duplicate registration.
 104 | [ ] BF-A-010 Prepare fallback for account lockouts or suspicious activity (documentation placeholder).
 105 |      Context: Security best practice.
 106 |      Definition of Done: Document guidelines even if not implemented yet.

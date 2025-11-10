@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS messages (
     -- The unique "number-used-once" for this message's encryption
     nonce TEXT NOT NULL,
 
-    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    -- Critical security constraint: ensure nonce uniqueness per sender
+    UNIQUE (sender_id, nonce)
 );
 
+-- Performance indices for message queries
+-- Composite index for conversation queries (most common query pattern)
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages (sender_id, recipient_id, sent_at);
+
+-- Index for time-based queries (admin monitoring, history fetching)
+CREATE INDEX IF NOT EXISTS idx_messages_sent_at ON messages (sent_at);

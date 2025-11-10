@@ -32,13 +32,28 @@ const authLimiter = rateLimit({
   },
 });
 
-// Database connection pool
+/**
+ * Database connection pool configuration
+ * 
+ * Production recommendations (set via environment variables):
+ * - max: 20 (default is 10) - Maximum number of clients in the pool
+ * - idleTimeoutMillis: 30000 (30 seconds) - How long a client can sit idle
+ * - connectionTimeoutMillis: 2000 (2 seconds) - How long to wait for connection
+ * 
+ * For high-traffic production:
+ * - Consider increasing max to 50-100 based on concurrent user load
+ * - Monitor pool.waitingCount to detect connection starvation
+ * - Use PgBouncer for connection pooling at scale
+ */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl:
     process.env.DB_SSL === 'true'
       ? { rejectUnauthorized: false }
       : false,
+  max: parseInt(process.env.DB_POOL_MAX || '10', 10),
+  idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000', 10),
+  connectionTimeoutMillis: parseInt(process.env.DB_CONNECT_TIMEOUT || '2000', 10),
 });
 
 // Express application setup
@@ -229,11 +244,34 @@ async function authenticateAdmin(req, res, next) {
   }
 }
 
-// Placeholder controller stubs for API endpoints
+/**
+ * Authentication Flow Documentation (per Docs.md TRD Section 3.3):
+ * 
+ * REGISTRATION:
+ * 1. Client generates nacl.box.keyPair() locally
+ * 2. Client derives encryption key from password using argon2
+ * 3. Client encrypts user's secretKey with password-derived key
+ * 4. Client sends username, password, publicKey, encryptedPrivateKey to server
+ * 5. Server hashes password with argon2 for authentication
+ * 6. Server stores username, password_hash, publicKey, encryptedPrivateKey
+ * 
+ * LOGIN:
+ * 1. Client sends username and password
+ * 2. Server verifies password against stored hash
+ * 3. Server returns JWT token and user's encryptedPrivateKey
+ * 4. Client derives same encryption key from password
+ * 5. Client decrypts encryptedPrivateKey to recover secretKey
+ * 6. Client now has secretKey in memory for message encryption/decryption
+ * 
+ * JWT tokens expire after JWT_EXPIRES_IN (default 24h) and must be renewed
+ */
+
+// API endpoint controllers
 async function registerUser(req, res, next) {
   try {
     const { username, password, publicKey, encryptedPrivateKey } = req.body || {};
 
+    // Validate request body types
     if (
       typeof username !== 'string' ||
       typeof password !== 'string' ||
@@ -248,6 +286,7 @@ async function registerUser(req, res, next) {
 
     const normalizedUsername = username.trim();
 
+    // Ensure all required fields are present
     if (!normalizedUsername || !password.trim() || !publicKey.trim() || !encryptedPrivateKey.trim()) {
       throw createHttpError(
         400,
@@ -255,12 +294,16 @@ async function registerUser(req, res, next) {
       );
     }
 
+    // Enforce server-side password complexity requirements
     if (!isPasswordComplex(password)) {
       throw createHttpError(400, 'Password does not meet complexity requirements.');
     }
 
+    // Hash password for authentication (not for key derivation)
     const passwordHash = await argon2.hash(password);
 
+    // Store user with hashed password and encrypted private key
+    // Note: Server cannot decrypt encryptedPrivateKey - it's encrypted with user's password
     const insertQuery = `
       INSERT INTO users (username, password_hash, public_key, encrypted_private_key)
       VALUES ($1, $2, $3, $4)

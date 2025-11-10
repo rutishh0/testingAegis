@@ -108,7 +108,7 @@
 096 | [x] BF-A-008 Document auth flow in README or inline comments referencing Docs.md.
 097 |      Context: Maintains developer understanding.
 098 |      Definition of Done: Comments or doc section summarizing steps.
-099 |      Status Note: Pending.
+099 |      Status Note: Completed with inline documentation in server.js and auth flow section in README.
 100 | [x] BF-A-009 Add basic integration test for register/login cycle (future).
 101 |      Context: Ensures hashed password + JWT handshake works end-to-end.
 102 |      Definition of Done: Test suite using supertest or similar.
@@ -277,15 +277,15 @@
 246 |      Context: Developer onboarding.
 247 |      Definition of Done: README updates with clear steps.
 248 |      Status Note: Completed with backend environment setup section covering .env creation, DB provisioning, and admin key guidance.
-249 | [ ] BF-I-008 Evaluate use of pg connection pooling parameters (max, idleTimeout).
+249 | [x] BF-I-008 Evaluate use of pg connection pooling parameters (max, idleTimeout).
 250 |      Context: Production readiness.
 251 |      Definition of Done: Document or configure defaults.
-252 |      Status Note: Pending.
+252 |      Status Note: Completed with configurable pool settings and production recommendations in server.js.
 253 | [x] BF-I-009 Establish linting/formatting config (ESLint, Prettier).
 254 |      Context: Code quality.
 255 |      Definition of Done: Config files added, npm scripts updated.
 256 |      Status Note: Completed with .eslintrc.json, .prettierrc.json, and lint/format npm scripts.
-257 | [ ] BF-I-010 Set up test harness (Jest or Vitest) for backend.
+257 | [x] BF-I-010 Set up test harness (Jest or Vitest) for backend.
 258 |      Context: Automated testing baseline.
 259 |      Definition of Done: Tests run via npm script, sample test created.
 260 |      Status Note: Completed via Jest + supertest harness and tests/health.test.js.
